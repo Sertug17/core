@@ -212,7 +212,9 @@ mod tests {
         let message = &tx_bytes[65..];
         let output = signer.sign(&privkey, message).unwrap();
 
-        let signed = signer.encode_signed_transaction(&tx_bytes, &output).unwrap();
+        let signed = signer
+            .encode_signed_transaction(&tx_bytes, &output)
+            .unwrap();
 
         // The signature should be spliced in at bytes 1..65
         assert_eq!(&signed[1..65], &output.signature[..]);

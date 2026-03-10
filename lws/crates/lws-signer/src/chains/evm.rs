@@ -347,15 +347,15 @@ mod tests {
 
         // Build a minimal unsigned EIP-1559 transaction
         let items: Vec<u8> = [
-            rlp::encode_bytes(&[1]),   // chain_id = 1
-            rlp::encode_bytes(&[]),    // nonce = 0
-            rlp::encode_bytes(&[1]),   // maxPriorityFeePerGas = 1
-            rlp::encode_bytes(&[100]), // maxFeePerGas = 100
+            rlp::encode_bytes(&[1]),          // chain_id = 1
+            rlp::encode_bytes(&[]),           // nonce = 0
+            rlp::encode_bytes(&[1]),          // maxPriorityFeePerGas = 1
+            rlp::encode_bytes(&[100]),        // maxFeePerGas = 100
             rlp::encode_bytes(&[0x52, 0x08]), // gasLimit = 21000
             rlp::encode_bytes(&[0xDE, 0xAD]), // to (truncated for test)
-            rlp::encode_bytes(&[]),    // value = 0
-            rlp::encode_bytes(&[]),    // data = empty
-            rlp::encode_list(&[]),     // accessList = empty
+            rlp::encode_bytes(&[]),           // value = 0
+            rlp::encode_bytes(&[]),           // data = empty
+            rlp::encode_list(&[]),            // accessList = empty
         ]
         .concat();
 

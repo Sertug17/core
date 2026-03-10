@@ -85,7 +85,10 @@ fn be_bytes(val: usize) -> Vec<u8> {
         return vec![0];
     }
     let bytes = val.to_be_bytes();
-    let start = bytes.iter().position(|&b| b != 0).unwrap_or(bytes.len() - 1);
+    let start = bytes
+        .iter()
+        .position(|&b| b != 0)
+        .unwrap_or(bytes.len() - 1);
     bytes[start..].to_vec()
 }
 
@@ -174,15 +177,15 @@ mod tests {
         // Construct a minimal unsigned EIP-1559 tx:
         // 0x02 || RLP([chain_id=1, nonce=0, maxPriorityFee=0, maxFee=0, gas=0, to="", value=0, data="", accessList=[]])
         let items: Vec<u8> = [
-            encode_bytes(&[1]),    // chain_id = 1
-            encode_bytes(&[]),     // nonce = 0
-            encode_bytes(&[]),     // maxPriorityFeePerGas = 0
-            encode_bytes(&[]),     // maxFeePerGas = 0
-            encode_bytes(&[]),     // gasLimit = 0
-            encode_bytes(&[]),     // to = empty (contract creation)
-            encode_bytes(&[]),     // value = 0
-            encode_bytes(&[]),     // data = empty
-            encode_list(&[]),      // accessList = empty
+            encode_bytes(&[1]), // chain_id = 1
+            encode_bytes(&[]),  // nonce = 0
+            encode_bytes(&[]),  // maxPriorityFeePerGas = 0
+            encode_bytes(&[]),  // maxFeePerGas = 0
+            encode_bytes(&[]),  // gasLimit = 0
+            encode_bytes(&[]),  // to = empty (contract creation)
+            encode_bytes(&[]),  // value = 0
+            encode_bytes(&[]),  // data = empty
+            encode_list(&[]),   // accessList = empty
         ]
         .concat();
 
