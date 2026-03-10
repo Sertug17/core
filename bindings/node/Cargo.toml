@@ -7,6 +7,10 @@ description = "Node.js native bindings for the Lightweight Wallet Signer"
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+default = []
+fast-kdf = ["lws-lib/fast-kdf"]
+
 [dependencies]
 lws-lib = { path = "../../lws/crates/lws-lib" }
 napi = { version = "2", features = ["napi6", "serde-json"] }

@@ -4,6 +4,10 @@ version = "0.2.0"
 edition = "2021"
 description = "High-level library API for the Lightweight Wallet Signer"
 
+[features]
+default = []
+fast-kdf = ["lws-signer/fast-kdf"]
+
 [dependencies]
 lws-core = { path = "../lws-core" }
 lws-signer = { path = "../lws-signer" }

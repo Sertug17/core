@@ -724,11 +724,12 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.18",
  "uuid",
+ "zeroize",
 ]
 
 [[package]]
 name = "lws-node"
-version = "0.2.16"
+version = "0.2.25"
 dependencies = [
  "lws-lib",
  "napi",
