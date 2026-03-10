@@ -57,93 +57,13 @@
       <a href="#quickstart" class="btn btn-outline btn-large">Quick Start</a>
     </div>
 
-    <!-- Install options -->
-    <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
-      <div class="code-block-wrapper">
-        <div class="code-block-header">
-          <span class="code-block-title">CLI + Bindings (install script)</span>
-          <button class="code-block-copy" onclick="copyCode(this)">Copy</button>
-        </div>
-        <div class="code-block">
+    <div class="code-block-wrapper" style="margin-top: 2rem; max-width: 480px; margin-left: auto; margin-right: auto;">
+      <div class="code-block-header">
+        <span class="code-block-title">Install</span>
+        <button class="code-block-copy" onclick="copyCode(this)">Copy</button>
+      </div>
+      <div class="code-block">
 <pre>curl -fsSL https://openwallet.sh/install.sh | bash</pre>
-        </div>
-      </div>
-      <div class="code-block-wrapper">
-        <div class="code-block-header">
-          <span class="code-block-title">Node.js only</span>
-          <button class="code-block-copy" onclick="copyCode(this)">Copy</button>
-        </div>
-        <div class="code-block">
-<pre>npm install @local-wallet-standard/node</pre>
-        </div>
-      </div>
-      <div class="code-block-wrapper">
-        <div class="code-block-header">
-          <span class="code-block-title">Python only</span>
-          <button class="code-block-copy" onclick="copyCode(this)">Copy</button>
-        </div>
-        <div class="code-block">
-<pre>pip install local-wallet-standard</pre>
-        </div>
-      </div>
-    </div>
-
-    <!-- Code Examples -->
-    <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-      <div class="code-block-wrapper">
-        <div class="code-block-header">
-          <span class="code-block-title">Node.js</span>
-          <button class="code-block-copy" onclick="copyCode(this)">Copy</button>
-        </div>
-        <div class="code-block">
-<pre><span class="keyword">import</span> { createWallet, signMessage }
-  <span class="keyword">from</span> <span class="string">"@local-wallet-standard/node"</span>;
-
-<span class="keyword">const</span> wallet = createWallet(<span class="string">"agent-treasury"</span>);
-<span class="comment">// => accounts for EVM, Solana, BTC, Cosmos, Tron</span>
-
-<span class="keyword">const</span> sig = signMessage(
-  <span class="string">"agent-treasury"</span>, <span class="string">"evm"</span>, <span class="string">"hello"</span>
-);
-console.log(sig.signature);</pre>
-        </div>
-      </div>
-      <div class="code-block-wrapper">
-        <div class="code-block-header">
-          <span class="code-block-title">Python</span>
-          <button class="code-block-copy" onclick="copyCode(this)">Copy</button>
-        </div>
-        <div class="code-block">
-<pre><span class="keyword">from</span> local_wallet_standard <span class="keyword">import</span> (
-    create_wallet, sign_message
-)
-
-wallet = create_wallet(<span class="string">"agent-treasury"</span>)
-<span class="comment"># => accounts for EVM, Solana, BTC, Cosmos, Tron</span>
-
-sig = sign_message(
-    <span class="string">"agent-treasury"</span>, <span class="string">"evm"</span>, <span class="string">"hello"</span>
-)
-print(sig[<span class="string">"signature"</span>])</pre>
-        </div>
-      </div>
-      <div class="code-block-wrapper">
-        <div class="code-block-header">
-          <span class="code-block-title">CLI</span>
-          <button class="code-block-copy" onclick="copyCode(this)">Copy</button>
-        </div>
-        <div class="code-block">
-<pre><span class="comment"># Create a wallet</span>
-lws wallet create \
-  --name <span class="string">"agent-treasury"</span>
-<span class="comment"># => accounts for EVM, Solana, BTC, Cosmos, Tron</span>
-
-<span class="comment"># Sign a message</span>
-lws sign message \
-  --wallet <span class="string">"agent-treasury"</span> \
-  --chain evm \
-  --message <span class="string">"hello"</span></pre>
-        </div>
       </div>
     </div>
   </section>
@@ -242,7 +162,7 @@ lws sign message \
           <span class="principle-number">02</span>
           <div>
             <h3>Chain-agnostic by default</h3>
-            <p>CAIP-2 chain identifiers and CAIP-10 account identifiers. EVM, Solana, Tron, Cosmos, Bitcoin&mdash;all first-class citizens. No chain is special.</p>
+            <p>CAIP-2 chain identifiers and CAIP-10 account identifiers. EVM, Solana, Tron, Cosmos, Bitcoin, TON&mdash;all first-class citizens. No chain is special.</p>
           </div>
         </div>
         <div class="principle">
@@ -348,7 +268,7 @@ lws sign message \
         <div class="feature-card">
           <div class="feature-icon">&#9939;</div>
           <h3>Zero chain lock-in</h3>
-          <p>CAIP-2 chain identifiers work for every chain. EVM, Solana, Cosmos, Bitcoin, Tron&mdash;and any future chain via the plugin system. Same interface, same vault, same policies.</p>
+          <p>CAIP-2 chain identifiers work for every chain. EVM, Solana, Cosmos, Bitcoin, Tron, TON&mdash;and any future chain via the plugin system. Same interface, same vault, same policies.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">&#128737;</div>
@@ -413,6 +333,47 @@ lws sign message \
       </div>
     </div>
 
+    <!-- Code examples side by side -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+      <div class="code-block-wrapper" style="max-width: 100%;">
+        <div class="code-block-header">
+          <span class="code-block-title">Node.js &mdash; <a href="https://www.npmjs.com/package/@local-wallet-standard/node" style="color: var(--gray-400); text-decoration: underline;">npm</a></span>
+          <button class="code-block-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <div class="code-block">
+<pre><span class="keyword">import</span> { createWallet, signMessage }
+  <span class="keyword">from</span> <span class="string">"@local-wallet-standard/node"</span>;
+
+<span class="keyword">const</span> wallet = createWallet(<span class="string">"agent-treasury"</span>);
+<span class="comment">// => accounts for EVM, Solana, BTC, Cosmos, Tron, TON</span>
+
+<span class="keyword">const</span> sig = signMessage(
+  <span class="string">"agent-treasury"</span>, <span class="string">"evm"</span>, <span class="string">"hello"</span>
+);
+console.log(sig.signature);</pre>
+        </div>
+      </div>
+      <div class="code-block-wrapper" style="max-width: 100%;">
+        <div class="code-block-header">
+          <span class="code-block-title">Python &mdash; <a href="https://pypi.org/project/local-wallet-standard/" style="color: var(--gray-400); text-decoration: underline;">PyPI</a></span>
+          <button class="code-block-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <div class="code-block">
+<pre><span class="keyword">from</span> local_wallet_standard <span class="keyword">import</span> (
+    create_wallet, sign_message
+)
+
+wallet = create_wallet(<span class="string">"agent-treasury"</span>)
+<span class="comment"># => accounts for EVM, Solana, BTC, Cosmos, Tron, TON</span>
+
+sig = sign_message(
+    <span class="string">"agent-treasury"</span>, <span class="string">"evm"</span>, <span class="string">"hello"</span>
+)
+print(sig[<span class="string">"signature"</span>])</pre>
+        </div>
+      </div>
+    </div>
+
     <!-- CLI example -->
     <div class="code-block-wrapper" style="max-width: 100%;">
       <div class="code-block-header">
@@ -423,44 +384,18 @@ lws sign message \
 <pre><span class="comment"># Create a wallet (derives addresses for all supported chains)</span>
 lws wallet create --name "agent-treasury"
 <span class="comment"># => Created wallet 3198bc9c-...</span>
-<span class="comment">#    eip155:1      0xab16...  m/44'/60'/0'/0/0</span>
-<span class="comment">#    solana:...    7Kz9...    m/44'/501'/0'/0'</span>
-<span class="comment">#    bip122:...    bc1q...    m/84'/0'/0'/0/0</span>
-<span class="comment">#    cosmos:...    cosmos1... m/44'/118'/0'/0/0</span>
-<span class="comment">#    tron:mainnet  TKLm...    m/44'/195'/0'/0/0</span>
+<span class="comment">#    eip155:1       0xab16...  m/44'/60'/0'/0/0</span>
+<span class="comment">#    solana:...     7Kz9...    m/44'/501'/0'/0'</span>
+<span class="comment">#    bip122:...     bc1q...    m/84'/0'/0'/0/0</span>
+<span class="comment">#    cosmos:...     cosmos1... m/44'/118'/0'/0/0</span>
+<span class="comment">#    tron:mainnet   TKLm...    m/44'/195'/0'/0/0</span>
+<span class="comment">#    ton:mainnet    EQCx...    m/44'/607'/0'/0'</span>
 
 <span class="comment"># Sign a message</span>
 lws sign message --wallet agent-treasury --chain evm --message <span class="string">"hello"</span>
 
 <span class="comment"># Sign a transaction</span>
 lws sign tx --wallet agent-treasury --chain evm --tx-hex <span class="string">"deadbeef..."</span></pre>
-      </div>
-    </div>
-
-    <!-- Node.js example -->
-    <div class="code-block-wrapper" style="max-width: 100%; margin-top: 1.5rem;">
-      <div class="code-block-header">
-        <span class="code-block-title">Node.js &mdash; <a href="https://www.npmjs.com/package/@local-wallet-standard/node" style="color: var(--gray-400); text-decoration: underline;">@local-wallet-standard/node</a></span>
-        <button class="code-block-copy" onclick="copyCode(this)">Copy</button>
-      </div>
-      <div class="code-block">
-<pre><span class="keyword">import</span> {
-  generateMnemonic,
-  createWallet,
-  signMessage,
-} <span class="keyword">from</span> <span class="string">"@local-wallet-standard/node"</span>;
-
-<span class="comment">// Generate a 12-word mnemonic</span>
-<span class="keyword">const</span> mnemonic = generateMnemonic(<span class="number">12</span>);
-
-<span class="comment">// Create a universal wallet (all chains at once)</span>
-<span class="keyword">const</span> wallet = createWallet(<span class="string">"agent-treasury"</span>);
-console.log(wallet.accounts);
-<span class="comment">// => [{ chainId: "eip155:1", address: "0x...", derivationPath: "m/44'/60'/0'/0/0" }, ...]</span>
-
-<span class="comment">// Sign a message</span>
-<span class="keyword">const</span> sig = signMessage(<span class="string">"agent-treasury"</span>, <span class="string">"evm"</span>, <span class="string">"hello"</span>);
-console.log(sig.signature);</pre>
       </div>
     </div>
 
@@ -526,7 +461,7 @@ console.log(sig.signature);</pre>
         <a href="docs/doc.html?slug=07-multi-chain-support" class="spec-card">
           <div class="spec-card-number">Spec 07</div>
           <h3>Multi-Chain Support</h3>
-          <p>Chain plugin interface, HD derivation, first-party plugins for EVM/Solana/Cosmos/Bitcoin/Tron.</p>
+          <p>Chain plugin interface, HD derivation, first-party plugins for EVM/Solana/Cosmos/Bitcoin/Tron/TON.</p>
         </a>
         <a href="docs/doc.html?slug=08-wallet-lifecycle" class="spec-card">
           <div class="spec-card-number">Spec 08</div>
