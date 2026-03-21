@@ -963,7 +963,9 @@ mod tests {
         let vault = dir.path();
         create_wallet("multi-sign", None, None, Some(vault)).unwrap();
 
-        let chains = ["evm", "solana", "bitcoin", "cosmos", "tron", "ton", "spark", "sui"];
+        let chains = [
+            "evm", "solana", "bitcoin", "cosmos", "tron", "ton", "spark", "sui",
+        ];
         for chain in &chains {
             let result = sign_message(
                 "multi-sign",
@@ -1001,7 +1003,9 @@ mod tests {
         solana_tx.extend_from_slice(&[0xDE, 0xAD, 0xBE, 0xEF]); // message payload
         let solana_tx_hex = hex::encode(&solana_tx);
 
-        let chains = ["evm", "solana", "bitcoin", "cosmos", "tron", "ton", "spark", "sui"];
+        let chains = [
+            "evm", "solana", "bitcoin", "cosmos", "tron", "ton", "spark", "sui",
+        ];
         for chain in &chains {
             let tx = if *chain == "solana" {
                 &solana_tx_hex

@@ -317,7 +317,10 @@ mod tests {
         assert_eq!(sig_part.len(), WIRE_SIG_LEN);
         assert_eq!(sig_part[0], ED25519_FLAG);
         assert_eq!(&sig_part[1..65], &output.signature[..]);
-        assert_eq!(&sig_part[65..], output.public_key.as_ref().unwrap().as_slice());
+        assert_eq!(
+            &sig_part[65..],
+            output.public_key.as_ref().unwrap().as_slice()
+        );
     }
 
     #[test]
