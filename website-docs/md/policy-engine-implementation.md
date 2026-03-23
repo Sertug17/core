@@ -255,23 +255,7 @@ JSON object available to both declarative evaluation and custom executables:
 
 ## Declarative Rules
 
-Five built-in rule types, evaluated in-process (microseconds):
-
-### `max_value_per_tx`
-
-```json
-{ "type": "max_value_per_tx", "max_wei": "1000000000000000000" }
-```
-
-Parses `transaction.value`, denies if it exceeds the threshold. EVM-only initially.
-
-### `daily_spending_limit`
-
-```json
-{ "type": "daily_spending_limit", "max_wei": "10000000000000000000" }
-```
-
-Reads cumulative daily spend from state store, denies if adding this transaction would exceed the cap. Resets at midnight UTC. State is per `(key_id, chain_id, date)`.
+Two built-in rule types, evaluated in-process (microseconds). Value limits, recipient allowlists, and cumulative spend are not declarative — use **`executable`** policies for those.
 
 ### `allowed_chains`
 
@@ -280,14 +264,6 @@ Reads cumulative daily spend from state store, denies if adding this transaction
 ```
 
 Denies if `chain_id` is not in the list.
-
-### `allowed_addresses`
-
-```json
-{ "type": "allowed_addresses", "addresses": ["0x742d35Cc6634C0532925a3b844Bc9e7595f2bD0C"] }
-```
-
-Denies if `transaction.to` is not in the list. Case-insensitive (EIP-55). EVM-only initially.
 
 ### `expires_at`
 
@@ -345,38 +321,6 @@ except Exception as e:
 
 ---
 
-## Spending State
-
-Daily spending limits need persistent, atomic state.
-
-### Storage
-
-```
-~/.ows/policy_state/
-  <key_id>/
-    spending-<chain_id>-<YYYY-MM-DD>.json
-```
-
-```json
-{
-  "key_id": "7a2f1b3c-...",
-  "chain_id": "eip155:8453",
-  "date": "2026-03-22",
-  "total_wei": "150000000000000000",
-  "transactions": [
-    { "timestamp": "2026-03-22T10:35:22Z", "value_wei": "100000000000000000" },
-    { "timestamp": "2026-03-22T14:20:00Z", "value_wei": "50000000000000000" }
-  ]
-}
-```
-
-- State is per `(key_id, chain_id, date)` — different API keys have independent budgets
-- `flock(LOCK_EX)` for atomicity on read-modify-write
-- Spend recorded **after** signing succeeds, **before** broadcast (fail-safe: if broadcast fails, budget is still consumed, preventing retry-loop exploits)
-- Files older than 7 days garbage-collected on next policy evaluation
-
----
-
 ## Storage Formats
 
 ### Policy file (`~/.ows/policies/<id>.json`)
@@ -388,8 +332,8 @@ Daily spending limits need persistent, atomic state.
   "version": 1,
   "created_at": "2026-03-22T10:00:00Z",
   "rules": [
-    { "type": "daily_spending_limit", "max_wei": "1000000000000000000" },
-    { "type": "allowed_chains", "chain_ids": ["eip155:8453", "eip155:84532"] }
+    { "type": "allowed_chains", "chain_ids": ["eip155:8453", "eip155:84532"] },
+    { "type": "expires_at", "timestamp": "2026-12-31T23:59:59Z" }
   ],
   "executable": null,
   "config": null,
@@ -513,7 +457,6 @@ ows-signer/src/
 
 ows-lib/src/
   policy_store.rs    NEW — CRUD for ~/.ows/policies/
-  policy_state.rs    NEW — spending state read/write/cleanup for ~/.ows/policy_state/
   policy_engine.rs   NEW — evaluate_policies(), declarative rule evaluation, executable subprocess
   key_store.rs       NEW — CRUD for ~/.ows/keys/, token generation, SHA-256 hashing
   key_ops.rs         NEW — create_api_key(), sign_with_api_key()
@@ -578,14 +521,12 @@ key_ops.rs
   ├── key_store.rs       (token lookup, key file I/O)
   ├── policy_engine.rs   (evaluate policies)
   │     └── policy_store.rs   (load policy files)
-  │     └── policy_state.rs   (read/write spending state)
   └── crypto.rs          (decrypt_with_hkdf — existing module, new function)
 ```
 
 Each new module has a narrow interface:
 
 - **`policy_store`**: `save_policy()`, `load_policy()`, `list_policies()`, `delete_policy()`
-- **`policy_state`**: `get_daily_spend()`, `record_spend()`, `cleanup_old_state()`
 - **`policy_engine`**: `evaluate_policies(policies, context) → PolicyResult`
 - **`key_store`**: `generate_token()`, `hash_token()`, `save_api_key()`, `load_api_key_by_token_hash()`, `list_api_keys()`, `delete_api_key()`
 - **`key_ops`**: `create_api_key()`, `sign_with_api_key()`
@@ -781,7 +722,7 @@ PR 8 (token-based signing) needs to insert credential detection and policy evalu
 | ~~**1**~~ | ~~**Unify signing paths**~~ | ~~Export `decrypt_signing_key()` from ows-lib, delete CLI's duplicate, single code path~~ | **Done** |
 | **2** | **Core types** | `Policy`, `PolicyRule`, `PolicyAction`, `PolicyContext`, `PolicyResult`, `ApiKeyFile` in ows-core. `PolicyDenied`/`ApiKeyNotFound` error variants. | — |
 | **3** | **HKDF encryption** | Add `encrypt_with_hkdf`/`decrypt_with_hkdf` to ows-signer. `kdf: "hkdf-sha256"` in CryptoEnvelope. | 0 ✓ |
-| **4** | **Policy storage** | `policy_store.rs` (CRUD for `~/.ows/policies/`), `policy_state.rs` (spending tracking) in ows-lib | 2 |
+| **4** | **Policy storage** | `policy_store.rs` (CRUD for `~/.ows/policies/`) in ows-lib | 2 |
 | **5** | **API key storage** | `key_store.rs` in ows-lib. Token generation, SHA-256 hashing, CRUD for `~/.ows/keys/`. | 2 |
 | **6** | **Policy evaluation engine** | `policy_engine.rs` in ows-lib. Declarative rules + executable subprocess support. | 2, 4 |
 | **7** | **API key creation** | `create_api_key()`: decrypt wallet → re-encrypt with HKDF(token) → store key file | 3, 5 |
@@ -829,7 +770,7 @@ PR 2 (types) ──┬── PR 4 (policy store) ── PR 6 (engine) ──┐ 
 
 **Wave 2** (after PR 0 and PR 2 merge):
 - **PR 1** and **PR 3** in parallel — PR 1 touches ows-lib/ops.rs and ows-cli/commands/mod.rs. PR 3 touches ows-signer/crypto.rs and Cargo.toml. No overlap.
-- **PR 4** and **PR 5** in parallel — PR 4 creates policy_store.rs + policy_state.rs. PR 5 creates key_store.rs. Both add module declarations to ows-lib/src/lib.rs (trivial merge). Different files otherwise.
+- **PR 4** and **PR 5** in parallel — PR 4 creates policy_store.rs. PR 5 creates key_store.rs. Both add module declarations to ows-lib/src/lib.rs (trivial merge). Different files otherwise.
 - **PR 6** and **PR 7** can overlap — PR 6 creates policy_engine.rs (needs PR 4). PR 7 adds create_api_key logic (needs PR 3 + PR 5). Independent chains, different files.
 
 **Wave 3** (after PR 8 — the convergence point):

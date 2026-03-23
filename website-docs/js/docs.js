@@ -144,7 +144,7 @@ async function loadDoc() {
   if (!doc) { window.location.href = './'; return; }
 
   document.title = doc.title + ' - OWS Docs';
-  buildSidebar(slug);
+  buildSidebar(doc.slug);
 
   var content = document.getElementById('docs-content');
 
@@ -157,7 +157,7 @@ async function loadDoc() {
     if (!md) throw new Error('not found');
 
     isFirstBlockquote = true;
-    content.innerHTML = marked.parse(md) + buildNav(slug);
+    content.innerHTML = marked.parse(md) + buildNav(doc.slug);
     addCopyButtons();
     scrollToHash();
   } catch (e) {
