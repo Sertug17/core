@@ -3,8 +3,8 @@ use base64::{engine::general_purpose::STANDARD as B64, Engine};
 use crate::chains;
 use crate::error::{PayError, PayErrorCode};
 use crate::types::{
-    Eip3009Authorization, Eip3009Payload, PayResult, PaymentInfo,
-    PaymentRequirements, Protocol, X402Response,
+    Eip3009Authorization, Eip3009Payload, PayResult, PaymentInfo, PaymentPayload,
+    PaymentPayloadV1, PaymentPayloadV2, PaymentRequirements, Protocol, X402Response,
 };
 use crate::wallet::WalletAccess;
 
@@ -57,7 +57,7 @@ fn build_signed_payment(
     network: &str,
     x402_version: u32,
     resource: Option<serde_json::Value>,
-) -> Result<(serde_json::Value, PaymentInfo), PayError> {
+) -> Result<(PaymentPayload, PaymentInfo), PayError> {
     match req.scheme.as_str() {
         "exact" => build_evm_exact(wallet, req, network, x402_version, resource),
         scheme => Err(PayError::new(
@@ -74,7 +74,7 @@ fn build_evm_exact(
     network: &str,
     x402_version: u32,
     resource: Option<serde_json::Value>,
-) -> Result<(serde_json::Value, PaymentInfo), PayError> {
+) -> Result<(PaymentPayload, PaymentInfo), PayError> {
     let account = wallet.account(network)?;
 
     let now = std::time::SystemTime::now()
@@ -160,18 +160,18 @@ fn build_evm_exact(
 
     let inner = serde_json::to_value(eip3009)?;
     let payload = if x402_version >= 2 {
-        serde_json::json!({
-            "x402Version": x402_version,
-            "accepted": req,
-            "resource": resource,
-            "payload": inner,
+        PaymentPayload::V2(PaymentPayloadV2 {
+            x402_version,
+            accepted: req.clone(),
+            resource,
+            payload: inner,
         })
     } else {
-        serde_json::json!({
-            "x402Version": x402_version,
-            "scheme": req.scheme,
-            "network": req.network,
-            "payload": inner,
+        PaymentPayload::V1(PaymentPayloadV1 {
+            x402_version,
+            scheme: req.scheme.clone(),
+            network: req.network.clone(),
+            payload: inner,
         })
     };
 
@@ -647,14 +647,17 @@ mod tests {
         let req = base_requirement();
         let (payload, info) = build_evm_exact(&EvmWallet, &req, "eip155:8453", 1, None).unwrap();
 
-        assert_eq!(payload["scheme"], "exact");
-        assert_eq!(payload["network"], "eip155:8453");
-        assert_eq!(payload["x402Version"], 1);
+        let v1 = match &payload {
+            PaymentPayload::V1(p) => p,
+            PaymentPayload::V2(_) => panic!("expected V1"),
+        };
+        assert_eq!(v1.scheme, "exact");
+        assert_eq!(v1.network, "eip155:8453");
+        assert_eq!(v1.x402_version, 1);
 
-        let p = &payload["payload"];
-        assert!(p.get("signature").is_some());
-        assert!(p.get("authorization").is_some());
-        let auth = &p["authorization"];
+        assert!(v1.payload.get("signature").is_some());
+        assert!(v1.payload.get("authorization").is_some());
+        let auth = &v1.payload["authorization"];
         assert_eq!(auth["from"], "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
         assert_eq!(auth["to"], req.pay_to);
         assert_eq!(auth["value"], req.amount);
