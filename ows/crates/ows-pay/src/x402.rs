@@ -170,7 +170,7 @@ fn build_evm_exact(
         serde_json::json!({
             "x402Version": x402_version,
             "scheme": req.scheme,
-            "network": network,
+            "network": req.network,
             "payload": inner,
         })
     };
