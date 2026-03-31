@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use ows_core::{ApiKeyFile, KeyType, OwsError};
+use ows_core::{ApiKeyFile, EncryptedWallet, OwsError};
 use ows_signer::{decrypt, encrypt_with_hkdf, signer_for_chain, CryptoEnvelope, SecretBytes};
 
 use crate::error::OwsLibError;
@@ -132,14 +132,7 @@ pub fn sign_with_api_key(
     }
 
     // 6. Decrypt wallet secret from key file using HKDF(token)
-    let key = decrypt_key_from_api_key(
-        &key_file,
-        &wallet.id,
-        wallet.key_type.clone(),
-        token,
-        chain.chain_type,
-        index,
-    )?;
+    let key = decrypt_key_from_api_key(&key_file, &wallet, token, chain.chain_type, index)?;
 
     // 7. Sign (extract signable portion first — e.g. strips Solana sig-slot headers)
     let signer = signer_for_chain(chain.chain_type);
@@ -200,14 +193,7 @@ pub fn sign_message_with_api_key(
         }));
     }
 
-    let key = decrypt_key_from_api_key(
-        &key_file,
-        &wallet.id,
-        wallet.key_type.clone(),
-        token,
-        chain.chain_type,
-        index,
-    )?;
+    let key = decrypt_key_from_api_key(&key_file, &wallet, token, chain.chain_type, index)?;
     let signer = signer_for_chain(chain.chain_type);
     let output = signer.sign_message(key.expose(), msg_bytes)?;
 
@@ -267,14 +253,7 @@ pub fn enforce_policy_and_decrypt_key(
         }));
     }
 
-    let key = decrypt_key_from_api_key(
-        &key_file,
-        &wallet.id,
-        wallet.key_type.clone(),
-        token,
-        chain.chain_type,
-        index,
-    )?;
+    let key = decrypt_key_from_api_key(&key_file, &wallet, token, chain.chain_type, index)?;
 
     Ok((key, key_file))
 }
@@ -315,21 +294,21 @@ fn load_policies_for_key(
 
 fn decrypt_key_from_api_key(
     key_file: &ApiKeyFile,
-    wallet_id: &str,
-    key_type: KeyType,
+    wallet: &EncryptedWallet,
     token: &str,
     chain_type: ows_core::ChainType,
     index: Option<u32>,
 ) -> Result<SecretBytes, OwsLibError> {
-    let envelope_value = key_file.wallet_secrets.get(wallet_id).ok_or_else(|| {
+    let envelope_value = key_file.wallet_secrets.get(&wallet.id).ok_or_else(|| {
         OwsLibError::InvalidInput(format!(
-            "API key has no encrypted secret for wallet {wallet_id}"
+            "API key has no encrypted secret for wallet {}",
+            wallet.id
         ))
     })?;
 
     let envelope: CryptoEnvelope = serde_json::from_value(envelope_value.clone())?;
     let secret = decrypt(&envelope, token)?;
-    crate::ops::secret_to_signing_key(&secret, key_type, chain_type, index)
+    crate::ops::secret_to_signing_key(&secret, &wallet.key_type, chain_type, index)
 }
 
 #[cfg(test)]

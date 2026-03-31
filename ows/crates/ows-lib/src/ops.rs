@@ -130,7 +130,7 @@ fn derive_all_accounts_from_keys(keys: &KeyPair) -> Result<Vec<WalletAccount>, O
 
 pub(crate) fn secret_to_signing_key(
     secret: &SecretBytes,
-    key_type: KeyType,
+    key_type: &KeyType,
     chain_type: ChainType,
     index: Option<u32>,
 ) -> Result<SecretBytes, OwsLibError> {
@@ -639,7 +639,7 @@ pub fn decrypt_signing_key(
     let wallet = vault::load_wallet_by_name_or_id(wallet_name_or_id, vault_path)?;
     let envelope: CryptoEnvelope = serde_json::from_value(wallet.crypto.clone())?;
     let secret = decrypt(&envelope, passphrase)?;
-    secret_to_signing_key(&secret, wallet.key_type, chain_type, index)
+    secret_to_signing_key(&secret, &wallet.key_type, chain_type, index)
 }
 
 /// Resolve the RPC URL: explicit > config override (exact chain_id) > config (namespace) > built-in default.
