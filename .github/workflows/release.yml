@@ -52,6 +52,10 @@ jobs:
         with:
           tool: cargo-zigbuild
 
+      - name: Use bash as default shell (zig CC wrapper requires bash)
+        if: contains(matrix.target, 'linux')
+        run: sudo ln -sf /bin/bash /bin/sh
+
       - name: Build (Linux - glibc 2.17+)
         if: contains(matrix.target, 'linux')
         run: cargo zigbuild --release --target ${{ matrix.target }}.2.17
@@ -183,6 +187,10 @@ jobs:
 
       - name: Install dependencies
         run: npm install --ignore-scripts
+
+      - name: Use bash as default shell (zig CC wrapper requires bash)
+        if: contains(matrix.target, 'linux')
+        run: sudo ln -sf /bin/bash /bin/sh
 
       - name: Build native addon (Linux - glibc 2.17+)
         if: contains(matrix.target, 'linux')
