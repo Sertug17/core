@@ -70,6 +70,71 @@ fn eval_expires_at(policy_id: &str, timestamp: &str, ctx: &PolicyContext) -> Pol
     }
 }
 
+fn eval_allowed_recipients(
+    policy_id: &str,
+    addresses: &[String],
+    ctx: &PolicyContext,
+) -> PolicyResult {
+    // Only gate EVM transactions — non-EVM and message signing pass through
+    if !ctx.chain_id.starts_with("eip155:") {
+        return PolicyResult::allowed();
+    }
+    match &ctx.transaction.to {
+        None => PolicyResult::denied(
+            policy_id,
+            "contract creation denied: no recipient address (allowed_recipients policy)",
+        ),
+        Some(to) => {
+            let to_lower = to.to_lowercase();
+            if addresses.iter().any(|a| a.to_lowercase() == to_lower) {
+                PolicyResult::allowed()
+            } else {
+                PolicyResult::denied(
+                    policy_id,
+                    format!("recipient {to} not in allowed_recipients allowlist"),
+                )
+            }
+        }
+    }
+}
+
+fn eval_max_transaction_value(policy_id: &str, max_wei: &str, ctx: &PolicyContext) -> PolicyResult {
+    // Only gate EVM transactions — non-EVM chains pass through
+    if !ctx.chain_id.starts_with("eip155:") {
+        return PolicyResult::allowed();
+    }
+    let value_str = match &ctx.transaction.value {
+        None => return PolicyResult::allowed(),
+        Some(v) => v,
+    };
+    let value: u128 = match value_str.parse() {
+        Ok(v) => v,
+        Err(_) => {
+            return PolicyResult::denied(
+                policy_id,
+                format!("could not parse transaction value '{value_str}' as integer"),
+            )
+        }
+    };
+    let max: u128 = match max_wei.parse() {
+        Ok(v) => v,
+        Err(_) => {
+            return PolicyResult::denied(
+                policy_id,
+                format!("could not parse max_wei '{max_wei}' as integer"),
+            )
+        }
+    };
+    if value <= max {
+        PolicyResult::allowed()
+    } else {
+        PolicyResult::denied(
+            policy_id,
+            format!("transaction value {value} wei exceeds max_wei {max}"),
+        )
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Executable policy evaluation
 // ---------------------------------------------------------------------------
@@ -584,67 +649,4 @@ mod tests {
         assert!(result.allow);
     }
 }
-fn eval_allowed_recipients(
-    policy_id: &str,
-    addresses: &[String],
-    ctx: &PolicyContext,
-) -> PolicyResult {
-    // Only gate EVM transactions — non-EVM and message signing pass through
-    if !ctx.chain_id.starts_with("eip155:") {
-        return PolicyResult::allowed();
-    }
-    match &ctx.transaction.to {
-        None => PolicyResult::denied(
-            policy_id,
-            "contract creation denied: no recipient address (allowed_recipients policy)",
-        ),
-        Some(to) => {
-            let to_lower = to.to_lowercase();
-            if addresses.iter().any(|a| a.to_lowercase() == to_lower) {
-                PolicyResult::allowed()
-            } else {
-                PolicyResult::denied(
-                    policy_id,
-                    format!("recipient {to} not in allowed_recipients allowlist"),
-                )
-            }
-        }
-    }
-}
 
-fn eval_max_transaction_value(policy_id: &str, max_wei: &str, ctx: &PolicyContext) -> PolicyResult {
-    // Only gate EVM transactions — non-EVM chains pass through
-    if !ctx.chain_id.starts_with("eip155:") {
-        return PolicyResult::allowed();
-    }
-    let value_str = match &ctx.transaction.value {
-        None => return PolicyResult::allowed(),
-        Some(v) => v,
-    };
-    let value: u128 = match value_str.parse() {
-        Ok(v) => v,
-        Err(_) => {
-            return PolicyResult::denied(
-                policy_id,
-                format!("could not parse transaction value '{value_str}' as integer"),
-            )
-        }
-    };
-    let max: u128 = match max_wei.parse() {
-        Ok(v) => v,
-        Err(_) => {
-            return PolicyResult::denied(
-                policy_id,
-                format!("could not parse max_wei '{max_wei}' as integer"),
-            )
-        }
-    };
-    if value <= max {
-        PolicyResult::allowed()
-    } else {
-        PolicyResult::denied(
-            policy_id,
-            format!("transaction value {value} wei exceeds max_wei {max}"),
-        )
-    }
-}
