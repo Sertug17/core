@@ -589,6 +589,10 @@ fn eval_allowed_recipients(
     addresses: &[String],
     ctx: &PolicyContext,
 ) -> PolicyResult {
+    // Only gate EVM transactions — non-EVM and message signing pass through
+    if !ctx.chain_id.starts_with("eip155:") {
+        return PolicyResult::allowed();
+    }
     match &ctx.transaction.to {
         None => PolicyResult::denied(
             policy_id,
@@ -609,6 +613,10 @@ fn eval_allowed_recipients(
 }
 
 fn eval_max_transaction_value(policy_id: &str, max_wei: &str, ctx: &PolicyContext) -> PolicyResult {
+    // Only gate EVM transactions — non-EVM chains pass through
+    if !ctx.chain_id.starts_with("eip155:") {
+        return PolicyResult::allowed();
+    }
     let value_str = match &ctx.transaction.value {
         None => return PolicyResult::allowed(),
         Some(v) => v,

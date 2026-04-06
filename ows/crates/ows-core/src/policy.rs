@@ -246,4 +246,36 @@ mod tests {
         let deserialized: PolicyAction = serde_json::from_value(json).unwrap();
         assert_eq!(deserialized, PolicyAction::Deny);
     }
+
+    #[test]
+    fn test_policy_rule_serde_allowed_recipients() {
+        let rule = PolicyRule::AllowedRecipients {
+            addresses: vec![
+                "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD0C".to_string(),
+                "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef".to_string(),
+            ],
+        };
+        let json = serde_json::to_value(&rule).unwrap();
+        assert_eq!(json["type"], "allowed_recipients");
+        assert_eq!(
+            json["addresses"][0],
+            "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD0C"
+        );
+
+        let deserialized: PolicyRule = serde_json::from_value(json).unwrap();
+        assert_eq!(deserialized, rule);
+    }
+
+    #[test]
+    fn test_policy_rule_serde_max_transaction_value() {
+        let rule = PolicyRule::MaxTransactionValue {
+            max_wei: "100000000000000000".to_string(),
+        };
+        let json = serde_json::to_value(&rule).unwrap();
+        assert_eq!(json["type"], "max_transaction_value");
+        assert_eq!(json["max_wei"], "100000000000000000");
+
+        let deserialized: PolicyRule = serde_json::from_value(json).unwrap();
+        assert_eq!(deserialized, rule);
+    }
 }
