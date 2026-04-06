@@ -196,8 +196,8 @@ fn parse_evm_tx_fields(tx_bytes: &[u8]) -> (Option<String>, Option<String>) {
             // Decode big-endian bytes as u128 (safe for values up to ~3.4e38)
             // For values > u128::MAX, return a string that exceeds any reasonable max_wei
             if b.len() > 16 {
-                // Value is > u128::MAX — treat as effectively infinite
-                u128::MAX.to_string()
+                // Value exceeds u128::MAX — use non-parseable sentinel to force denial
+                "U128_OVERFLOW".to_string()
             } else {
                 let mut n: u128 = 0;
                 for byte in b {
