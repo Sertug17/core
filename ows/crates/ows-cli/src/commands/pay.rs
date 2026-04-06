@@ -106,7 +106,11 @@ pub fn run(
     let result = rt.block_on(ows_pay::pay(&wallet, url, method, body))?;
 
     if result.status >= 400 {
-        eprintln!("HTTP {} — payment rejected by server", result.status);
+        if result.payment.is_some() {
+            eprintln!("HTTP {} — payment rejected by server", result.status);
+        } else {
+            eprintln!("HTTP {}", result.status);
+        }
     } else if let Some(ref payment) = result.payment {
         if !payment.amount.is_empty() {
             eprintln!(
